@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Ketimpangan Pendidikan</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>📊 Dashboard</h2>
+    <p>Ketimpangan Pendidikan Jawa Timur</p>
+
+    <div class="filter-box">
+        <label>Filter Cluster</label>
+        <select id="clusterFilter">
+            <option value="all">Semua</option>
+            <option value="High-High">High-High</option>
+            <option value="Low-Low">Low-Low</option>
+        </select>
+    </div>
+</div>
+
+<div class="main-content">
+
+    <div class="header">
+        <h1>Dashboard Ketimpangan Pendidikan</h1>
+        <p>Berbasis Statistik Spasial dan PCA</p>
+    </div>
+
+    <div class="cards">
+        <div class="card">
+            <h3>Rata-rata Indeks</h3>
+            <p id="avgIndex">0</p>
+        </div>
+
+        <div class="card">
+            <h3>Kabupaten Terbaik</h3>
+            <p id="bestRegion">-</p>
+        </div>
+
+        <div class="card">
+            <h3>Kabupaten Terendah</h3>
+            <p id="worstRegion">-</p>
+        </div>
+
+        <div class="card">
+            <h3>Global Moran's I</h3>
+            <p>0.312</p>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="barChart"></canvas>
+    </div>
+
+    <div class="table-section">
+        <h2>Data Pendidikan</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Kabupaten</th>
+                    <th>Indeks</th>
+                    <th>APS</th>
+                    <th>RLS</th>
+                    <th>Melek Huruf</th>
+                    <th>Cluster</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
