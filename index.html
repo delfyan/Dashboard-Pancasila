@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Ketimpangan Pendidikan Jawa Timur</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div id="loading-screen">
+    <div class="loader-wrap">
+      <div class="loader-logo">
+        <i class="fas fa-graduation-cap"></i>
+        <span>EduSpatial</span>
+      </div>
+      <div class="loader-bar"><div class="loader-fill"></div></div>
+      <p class="loader-text">Memuat data pendidikan Jawa Timur…</p>
+    </div>
+  </div>
+
+  <!-- Sidebar Overlay (mobile) -->
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon"><i class="fas fa-graduation-cap"></i></div>
+        <div class="logo-text">
+          <span class="logo-name">EduSpatial</span>
+          <span class="logo-sub">Jawa Timur</span>
+        </div>
+      </div>
+      <button class="sidebar-close" id="sidebar-close"><i class="fas fa-times"></i></button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <span class="nav-group-label">Utama</span>
+        <a href="#overview" class="nav-item active" data-section="overview">
+          <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+          <span class="nav-label">Overview</span>
+          <span class="nav-badge">Live</span>
+        </a>
+        <a href="#peta" class="nav-item" data-section="peta">
+          <span class="nav-icon"><i class="fas fa-map-marked-alt"></i></span>
+          <span class="nav-label">Peta Pendidikan</span>
+        </a>
+      </div>
+      <div class="nav-group">
+        <span class="nav-group-label">Analisis</span>
+        <a href="#spasial" class="nav-item" data-section="spasial">
+          <span class="nav-icon"><i class="fas fa-project-diagram"></i></span>
+          <span class="nav-label">Statistik Spasial</span>
+        </a>
+        <a href="#pca" class="nav-item" data-section="pca">
+          <span class="nav-icon"><i class="fas fa-chart-pie"></i></span>
+          <span class="nav-label">PCA Analysis</span>
+        </a>
+        <a href="#data" class="nav-item" data-section="data">
+          <span class="nav-icon"><i class="fas fa-table"></i></span>
+          <span class="nav-label">Data Kabupaten</span>
+        </a>
+      </div>
+      <div class="nav-group">
+        <span class="nav-group-label">Informasi</span>
+        <a href="#tentang" class="nav-item" data-section="tentang">
+          <span class="nav-icon"><i class="fas fa-info-circle"></i></span>
+          <span class="nav-label">Tentang</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="theme-toggle-wrap">
+        <span><i class="fas fa-sun"></i> Mode Tampilan</span>
+        <button class="theme-toggle" id="theme-toggle" title="Toggle dark/light mode">
+          <span class="toggle-thumb"></span>
+        </button>
+        <span><i class="fas fa-moon"></i></span>
+      </div>
+      <p class="sidebar-credit">Data: BPS Jawa Timur 2023</p>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="main-content">
+
+    <!-- HEADER -->
+    <header class="dashboard-header">
+      <div class="header-left">
+        <button class="hamburger" id="hamburger"><i class="fas fa-bars"></i></button>
+        <div class="header-titles">
+          <h1 class="header-main">Dashboard Ketimpangan Pendidikan Jawa Timur</h1>
+          <p class="header-sub">Analisis Statistik Spasial dan PCA · <span id="last-updated">2023</span></p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="search-wrap">
+          <i class="fas fa-search"></i>
+          <input type="text" id="global-search" placeholder="Cari kabupaten…" />
+        </div>
+        <div class="filter-group">
+          <select id="filter-tahun" class="filter-select">
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+            <option value="2019">2019</option>
+          </select>
+          <select id="filter-cluster" class="filter-select">
+            <option value="all">Semua Cluster</option>
+            <option value="HH">High-High</option>
+            <option value="HL">High-Low</option>
+            <option value="LH">Low-High</option>
+            <option value="LL">Low-Low</option>
+          </select>
+        </div>
+        <button class="btn-download-csv" id="btn-download-csv" title="Download CSV">
+          <i class="fas fa-download"></i><span>CSV</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- SECTIONS -->
+    <div class="content-wrapper">
+
+      <!-- ===== OVERVIEW SECTION ===== -->
+      <section id="overview" class="section active">
+        <div class="section-heading">
+          <h2><i class="fas fa-th-large"></i> Overview</h2>
+          <span class="section-tag">Ringkasan 38 Kab/Kota</span>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-primary" data-aos>
+            <div class="kpi-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="kpi-body">
+              <span class="kpi-label">Rata-rata Indeks Pendidikan</span>
+              <span class="kpi-value" id="kpi-avg">—</span>
+              <span class="kpi-delta positive"><i class="fas fa-arrow-up"></i> +1.3 dari 2022</span>
+            </div>
+          </div>
+          <div class="kpi-card kpi-success" data-aos>
+            <div class="kpi-icon"><i class="fas fa-trophy"></i></div>
+            <div class="kpi-body">
+              <span class="kpi-label">Kabupaten Terbaik</span>
+              <span class="kpi-value" id="kpi-best">—</span>
+              <span class="kpi-delta" id="kpi-best-val">—</span>
+            </div>
+          </div>
+          <div class="kpi-card kpi-danger" data-aos>
+            <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="kpi-body">
+              <span class="kpi-label">Kabupaten Terendah</span>
+              <span class="kpi-value" id="kpi-worst">—</span>
+              <span class="kpi-delta negative" id="kpi-worst-val">—</span>
+            </div>
+          </div>
+          <div class="kpi-card kpi-info" data-aos>
+            <div class="kpi-icon"><i class="fas fa-globe-asia"></i></div>
+            <div class="kpi-body">
+              <span class="kpi-label">Global Moran's I</span>
+              <span class="kpi-value" id="kpi-morans">—</span>
+              <span class="kpi-delta positive">Autokorelasi Positif</span>
+            </div>
+          </div>
+          <div class="kpi-card kpi-warning" data-aos>
+            <div class="kpi-icon"><i class="fas fa-flask"></i></div>
+            <div class="kpi-body">
+              <span class="kpi-label">P-value (Moran's)</span>
+              <span class="kpi-value" id="kpi-pvalue">—</span>
+              <span class="kpi-delta positive">Signifikan (α = 0.05)</span>
+            </div>
+          </div>
+          <div class="kpi-card kpi-purple" data-aos>
+            <div class="kpi-icon"><i class="fas fa-layer-group"></i></div>
+            <div class="kpi-body">
+              <span class="kpi-label">Jumlah Cluster LISA</span>
+              <span class="kpi-value" id="kpi-clusters">4</span>
+              <span class="kpi-delta">HH · HL · LH · LL</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Insight Banner -->
+        <div class="insight-banner" id="insight-main">
+          <div class="insight-icon"><i class="fas fa-lightbulb"></i></div>
+          <div class="insight-body">
+            <strong>Interpretasi Statistik:</strong>
+            <span id="insight-text">Memuat interpretasi…</span>
+          </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="charts-grid-2">
+          <div class="chart-card" data-aos>
+            <div class="chart-card-header">
+              <h3><i class="fas fa-bars"></i> Ranking Indeks Pendidikan</h3>
+              <button class="btn-export-chart" data-chart="chart-ranking" title="Export PNG">
+                <i class="fas fa-image"></i>
+              </button>
+            </div>
+            <div class="chart-wrap"><canvas id="chart-ranking"></canvas></div>
+          </div>
+          <div class="chart-card" data-aos>
+            <div class="chart-card-header">
+              <h3><i class="fas fa-chart-pie"></i> Distribusi Cluster LISA</h3>
+              <button class="btn-export-chart" data-chart="chart-cluster" title="Export PNG">
+                <i class="fas fa-image"></i>
+              </button>
+            </div>
+            <div class="chart-wrap chart-wrap-sm"><canvas id="chart-cluster"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="charts-grid-2">
+          <div class="chart-card" data-aos>
+            <div class="chart-card-header">
+              <h3><i class="fas fa-chart-area"></i> Tren Rata-rata Indeks Pendidikan</h3>
+              <button class="btn-export-chart" data-chart="chart-tren" title="Export PNG">
+                <i class="fas fa-image"></i>
+              </button>
+            </div>
+            <div class="chart-wrap"><canvas id="chart-tren"></canvas></div>
+          </div>
+          <div class="chart-card" data-aos>
+            <div class="chart-card-header">
+              <h3><i class="fas fa-spider"></i> Radar Indikator Pendidikan</h3>
+              <button class="btn-export-chart" data-chart="chart-radar" title="Export PNG">
+                <i class="fas fa-image"></i>
+              </button>
+            </div>
+            <div class="chart-wrap chart-wrap-sm"><canvas id="chart-radar"></canvas></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===== PETA SECTION ===== -->
+      <section id="peta" class="section">
+        <div class="section-heading">
+          <h2><i class="fas fa-map-marked-alt"></i> Peta Pendidikan</h2>
+          <span class="section-tag">Choropleth Map Interaktif</span>
+        </div>
+        <div class="map-panel">
+          <div class="map-controls">
+            <div class="map-legend-card">
+              <h4><i class="fas fa-palette"></i> Legenda Indeks Pendidikan</h4>
+              <div class="legend-items">
+                <div class="legend-item"><span class="legend-swatch" style="background:#1a7a4a"></span><span>Tinggi (≥ 80)</span></div>
+                <div class="legend-item"><span class="legend-swatch" style="background:#52b788"></span><span>Cukup Tinggi (70–79)</span></div>
+                <div class="legend-item"><span class="legend-swatch" style="background:#f9c74f"></span><span>Sedang (65–69)</span></div>
+                <div class="legend-item"><span class="legend-swatch" style="background:#f77f00"></span><span>Rendah (60–64)</span></div>
+                <div class="legend-item"><span class="legend-swatch" style="background:#d62828"></span><span>Sangat Rendah (< 60)</span></div>
+              </div>
+              <hr class="legend-divider"/>
+              <h4><i class="fas fa-layer-group"></i> Cluster LISA</h4>
+              <div class="legend-items">
+                <div class="legend-item"><span class="legend-swatch cluster-hh"></span><span>High-High (HH)</span></div>
+                <div class="legend-item"><span class="legend-swatch cluster-hl"></span><span>High-Low (HL)</span></div>
+                <div class="legend-item"><span class="legend-swatch cluster-lh"></span><span>Low-High (LH)</span></div>
+                <div class="legend-item"><span class="legend-swatch cluster-ll"></span><span>Low-Low (LL)</span></div>
+              </div>
+              <div class="map-layer-toggle">
+                <label><input type="radio" name="map-layer" value="indeks" checked> Indeks Pendidikan</label>
+                <label><input type="radio" name="map-layer" value="cluster"> Cluster LISA</label>
+              </div>
+            </div>
+          </div>
+          <div id="map" class="leaflet-map"></div>
+        </div>
+      </section>
+
+      <!-- ===== STATISTIK SPASIAL SECTION ===== -->
+      <section id="spasial" class="section">
+        <div class="section-heading">
+          <h2><i class="fas fa-project-diagram"></i> Statistik Spasial</h2>
+          <span class="section-tag">Moran's I & LISA</span>
+        </div>
+
+        <div class="stats-cards-row">
+          <div class="stat-detail-card">
+            <span class="stat-detail-label">Moran's I</span>
+            <span class="stat-detail-val" id="sd-morans">—</span>
+          </div>
+          <div class="stat-detail-card">
+            <span class="stat-detail-label">Z-Score</span>
+            <span class="stat-detail-val" id="sd-zscore">—</span>
+          </div>
+          <div class="stat-detail-card">
+            <span class="stat-detail-label">P-value</span>
+            <span class="stat-detail-val" id="sd-pvalue">—</span>
+          </div>
+          <div class="stat-detail-card">
+            <span class="stat-detail-label">Expected I</span>
+            <span class="stat-detail-val" id="sd-expected">—</span>
+          </div>
+        </div>
+
+        <div class="charts-grid-2">
+          <div class="chart-card" data-aos>
+            <div class="chart-card-header">
+              <h3><i class="fas fa-chart-scatter"></i> Moran Scatterplot</h3>
+              <button class="btn-export-chart" data-chart="chart-moran" title="Export PNG">
+                <i class="fas fa-image"></i>
+              </button>
+            </div>
+            <div class="chart-wrap"><canvas id="chart-moran"></canvas></div>
+          </div>
+          <div class="chart-card" data-aos>
+            <div class="chart-card-header">
+              <h3><i class="fas fa-th"></i> Heatmap Korelasi Variabel</h3>
+              <button class="btn-export-chart" data-chart="chart-heatmap" title="Export PNG">
+                <i class="fas fa-image"></i>
+              </button>
+            </div>
+            <div class="chart-wrap"><canvas id="chart-heatmap"></canvas></div>
+          </div>
+        </div>
+
+        <div class="insight-banner" id="insight-spasial">
+          <div class="insight-icon"><i class="fas fa-microscope"></i></div>
+          <div class="insight-body">
+            <strong>Interpretasi Moran's I:</strong>
+            <span id="spasial-text">Memuat…</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PCA SECTION ===== -->
+      <section id="pca" class="section">
+        <div class="section-heading">
+          <h2><i class="fas fa-chart-pie"></i> PCA Analysis</h2>
+          <span class="section-tag">Principal Component Analysis</span>
+        </div>
+
+        <div class="charts-grid-2">
+          <div class="chart-card" data-aos>
+            <div class="chart-card-header">
+              <h3><i class="fas fa-percentage"></i> Variansi yang Dijelaskan per Komponen</h3>
+              <button class="btn-export-chart" data-chart="chart-pca-var" title="Export PNG">
+                <i class="fas fa-image"></i>
+              </button>
+            </div>
+            <div class="chart-wrap"><canvas id="chart-pca-var"></canvas></div>
+          </div>
+          <div class="chart-card" data-aos>
+            <div class="chart-card-header">
+              <h3><i class="fas fa-chart-line"></i> Cumulative Variance Explained</h3>
+              <button class="btn-export-chart" data-chart="chart-pca-cum" title="Export PNG">
+                <i class="fas fa-image"></i>
+              </button>
+            </div>
+            <div class="chart-wrap"><canvas id="chart-pca-cum"></canvas></div>
+          </div>
+        </div>
+
+        <div class="pca-loadings-card" data-aos>
+          <h3><i class="fas fa-matrix"></i> PCA Loadings — Komponen Utama</h3>
+          <div class="loadings-table-wrap">
+            <table class="loadings-table" id="pca-loadings-table">
+              <thead>
+                <tr>
+                  <th>Variabel</th>
+                  <th>PC1</th>
+                  <th>PC2</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="insight-banner" id="insight-pca">
+          <div class="insight-icon"><i class="fas fa-atom"></i></div>
+          <div class="insight-body">
+            <strong>Interpretasi PCA:</strong>
+            PC1 menjelaskan 52.3% variansi total dan memuat semua indikator pendidikan dengan bobot positif tinggi, mengindikasikan bahwa komponen pertama merepresentasikan kapasitas pendidikan umum suatu wilayah. PC2 (24.1%) menangkap kontras antara partisipasi sekolah tinggi dan melek huruf rendah, yang merupakan pola khas wilayah dengan ekspansi akses baru.
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== DATA KABUPATEN SECTION ===== -->
+      <section id="data" class="section">
+        <div class="section-heading">
+          <h2><i class="fas fa-table"></i> Data Kabupaten</h2>
+          <span class="section-tag">38 Kabupaten/Kota Jawa Timur</span>
+        </div>
+
+        <div class="table-toolbar">
+          <div class="table-search-wrap">
+            <i class="fas fa-search"></i>
+            <input type="text" id="table-search" placeholder="Cari kabupaten…" />
+          </div>
+          <div class="table-actions">
+            <span id="table-count" class="table-count">— entri</span>
+            <button id="btn-table-csv" class="btn-sm">
+              <i class="fas fa-file-csv"></i> Export CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table" id="data-table">
+            <thead>
+              <tr>
+                <th class="sortable" data-col="nama">Kabupaten/Kota <i class="fas fa-sort"></i></th>
+                <th class="sortable" data-col="aps">APS <i class="fas fa-sort"></i></th>
+                <th class="sortable" data-col="rls">RLS <i class="fas fa-sort"></i></th>
+                <th class="sortable" data-col="melek_huruf">Melek Huruf <i class="fas fa-sort"></i></th>
+                <th class="sortable" data-col="indeks_pendidikan">Indeks Pendidikan <i class="fas fa-sort"></i></th>
+                <th class="sortable" data-col="cluster_label">Cluster <i class="fas fa-sort"></i></th>
+              </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </section>
+
+      <!-- ===== TENTANG SECTION ===== -->
+      <section id="tentang" class="section">
+        <div class="section-heading">
+          <h2><i class="fas fa-info-circle"></i> Tentang Dashboard</h2>
+        </div>
+        <div class="about-grid">
+          <div class="about-card" data-aos>
+            <div class="about-icon"><i class="fas fa-bullseye"></i></div>
+            <h3>Tujuan</h3>
+            <p>Dashboard ini dirancang untuk memvisualisasikan dan menganalisis ketimpangan pendidikan di 38 kabupaten/kota Provinsi Jawa Timur menggunakan pendekatan statistik spasial (Moran's I, LISA) dan analisis komponen utama (PCA).</p>
+          </div>
+          <div class="about-card" data-aos>
+            <div class="about-icon"><i class="fas fa-database"></i></div>
+            <h3>Sumber Data</h3>
+            <p>Data indikator pendidikan bersumber dari Badan Pusat Statistik (BPS) Jawa Timur, mencakup Angka Partisipasi Sekolah (APS), Rata-rata Lama Sekolah (RLS), Angka Melek Huruf, dan Angka Partisipasi Kasar (APK).</p>
+          </div>
+          <div class="about-card" data-aos>
+            <div class="about-icon"><i class="fas fa-cogs"></i></div>
+            <h3>Metodologi</h3>
+            <p>Analisis mencakup (1) Konstruksi indeks pendidikan komposit berbasis PCA, (2) Uji Moran's I global untuk autokorelasi spasial, (3) Pemetaan LISA untuk identifikasi klaster lokal, dan (4) Interpretasi pola spasial ketimpangan.</p>
+          </div>
+          <div class="about-card" data-aos>
+            <div class="about-icon"><i class="fas fa-code"></i></div>
+            <h3>Teknologi</h3>
+            <p>Dibangun dengan HTML5, CSS3, dan JavaScript murni. Visualisasi menggunakan Chart.js dan peta interaktif dengan Leaflet.js. Dashboard dapat dijalankan langsung di GitHub Pages tanpa backend.</p>
+          </div>
+        </div>
+        <div class="about-variables">
+          <h3><i class="fas fa-list-ul"></i> Variabel Indikator</h3>
+          <div class="variables-grid">
+            <div class="var-item"><span class="var-tag">APS</span><span>Angka Partisipasi Sekolah — proporsi penduduk usia sekolah yang bersekolah (%)</span></div>
+            <div class="var-item"><span class="var-tag">RLS</span><span>Rata-rata Lama Sekolah — rata-rata tahun sekolah penduduk usia ≥ 25 tahun</span></div>
+            <div class="var-item"><span class="var-tag">MH</span><span>Melek Huruf — proporsi penduduk yang dapat membaca dan menulis (%)</span></div>
+            <div class="var-item"><span class="var-tag">APK</span><span>Angka Partisipasi Kasar SMA — rasio siswa SMA terhadap penduduk usia 16–18 (%)</span></div>
+            <div class="var-item"><span class="var-tag">IP</span><span>Indeks Pendidikan — skor komposit gabungan seluruh indikator (0–100)</span></div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- end content-wrapper -->
+  </main>
+
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <!-- Leaflet.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <!-- Main Script -->
+  <script src="script.js"></script>
+</body>
+</html>
